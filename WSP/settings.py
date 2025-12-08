@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+from datetime import timedelta # تم إضافة هذا الاستيراد لإعدادات JWT
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +22,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-from decouple import config
 SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,9 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # تطبيقات المشروع
     'users.apps.UsersConfig',  
     'scanning.apps.ScanningConfig',
     'reporting.apps.ReportingConfig',
+    
+    # تطبيقات الطرف الثالث
+    'rest_framework',         # تم إضافته لـ Django Rest Framework
+    'rest_framework_simplejwt', # تم إضافته للمصادقة بالـ JWT Token
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -79,6 +86,7 @@ WSGI_APPLICATION = 'WSP.wsgi.application'
 
 DATABASES = {
     'default': {
+        # ملاحظة: تم الإبقاء على SQLite مؤقتًا. يجب التغيير إلى postgresql لاحقًا.
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
@@ -120,3 +128,44 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
+# ----------------------------------------------------
+# 🔐 DJANGO REST FRAMEWORK & JWT SETTINGS
+# ----------------------------------------------------
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # لجعل التوكن هو الطريقة الافتراضية للمصادقة في API
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated', # الافتراضي هو طلب تسجيل الدخول
+    )
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60), # صلاحية التوكن ساعة واحدة
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),   # صلاحية توكن التحديث يوم واحد
+    "ROTATE_REFRESH_TOKENS": True,
+    "ALGORITHM": "HS256",
+}
+
+
+# ----------------------------------------------------
+# ⚙️ CELERY SETTINGS
+# ----------------------------------------------------
+
+# يجب أن يكون خادم Redis يعمل على المنفذ الافتراضي (6379)
+CELERY_BROKER_URL = 'redis://localhost:6379/0' 
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = TIME_ZONE
+
+# ----------------- MEDIA SETTINGS (لتخزين التقارير) -----------------
+import os
+MEDIA_URL = '/media/'
+# هذا يحدد المسار الفعلي حيث يتم تخزين الملفات على القرص الصلب
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
