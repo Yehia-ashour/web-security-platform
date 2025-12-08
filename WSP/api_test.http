@@ -1,18 +1,33 @@
-# 1. طلب تسجيل الدخول للحصول على التوكن
 POST http://127.0.0.1:8000/api/token/
 Content-Type: application/json
 
 {
     "username": "yehia33", 
-    "password": "Yehia135xz"
+    "password": "Yehia135xz" 
 }
 
-# 2. إنشاء ملف اختبار جديد
+
+
+### Get scanning profiles (protected)
+GET http://127.0.0.1:8000/api/scanning/scans/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjM3MzE3LCJpYXQiOjE3NjUyMzM3MTcsImp0aSI6Ijg2N2E0ODA2YTFiMDQzOWJiNDc3YjRmNmU4ZTQ2YjgwIiwidXNlcl9pZCI6IjEifQ.1Lwh6cr_KXBTdabunqx925yvB_-zAuiUg1k6jUZu8jk
+
+
+### Get scanning profiles (protected)
+POST http://127.0.0.1:8000/api/scanning/profiles/<1>/run_scan/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjM3MzE3LCJpYXQiOjE3NjUyMzM3MTcsImp0aSI6Ijg2N2E0ODA2YTFiMDQzOWJiNDc3YjRmNmU4ZTQ2YjgwIiwidXNlcl9pZCI6IjEifQ.1Lwh6cr_KXBTdabunqx925yvB_-zAuiUg1k6jUZu8jk
+
+### Get scanning profiles (protected)
+GET http://127.0.0.1:8000/api/scanning/profiles/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjM3NzM4LCJpYXQiOjE3NjUyMzQxMzgsImp0aSI6IjRiOGNhNzllMWUzYjQyMzM5ODA3YWExNGRiYjBhZDcwIiwidXNlcl9pZCI6IjEifQ.XQm6hUsSO16Mnj105XAFLTW3LBVYmvsSvjiKXiK6XPs
+
+
+### Get scanning profiles (protected)
 POST http://127.0.0.1:8000/api/scanning/profiles/
-Authorization: Bearer <eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjAxNjE4LCJpYXQiOjE3NjUxOTgwMTgsImp0aSI6IjRlNGYyMzYzYmRkOTQ3NzliNjNiMTFlOGRiOTg4MjVkIiwidXNlcl9pZCI6IjEifQ.Uy-5IPqSTE9LrMDR2qBnVxKSKX90jOSSfStKB2n_MAs> 
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjM4NTY1LCJpYXQiOjE3NjUyMzQ5NjUsImp0aSI6IjQ0NTJmNTczZmRmZjRkYzRiYzU4NmZiYWNjY2ZiYzVjIiwidXNlcl9pZCI6IjEifQ.xq1vC9NbVdckmg9s3KqspHBYrGmZJdEVuMvGrMTFjUI
 Content-Type: application/json
 
 {
-    "name": "Test for Report Export",
-    "target_url": "http://test-site.com"
+    "name": "Basic Scan",
+    "description": "https://example.com"
 }
