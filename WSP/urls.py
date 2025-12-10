@@ -1,20 +1,27 @@
-# project_name/urls.py
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView, 
-    TokenRefreshView,     
+    TokenObtainPairView,
+    TokenRefreshView,
 )
+
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    # مسارات المصادقة (Login)
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'), 
+
+    # Authentication
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    
-    # ------------------ ربط مسارات تطبيق SCANNING ------------------
-    # يتم الوصول إلى كل المسارات في scanning/urls.py عبر /api/scanning/
-    path('api/scanning/', include('scanning.urls')), 
-    # -----------------------------------------------------------------
+
+    # Scanning module
+    path('api/scanning/', include('scanning.urls')),
+
+    # (Optional) Reporting module if we add URLs later
+    # path('api/reporting/', include('reporting.urls')),
 ]
+
+# Serve media files (PDF reports)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

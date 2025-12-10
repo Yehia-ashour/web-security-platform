@@ -1,61 +1,81 @@
-# reporting/tasks.py
 from celery import shared_task
+from reportlab.pdfgen import canvas
 from django.conf import settings
-from scanning.models import Scan, Vulnerability
 from .models import Report
-import time
 import os
-import uuid
-from django.utils import timezone
 
-@shared_task(bind=True)
-def generate_report_pdf(self, report_id):
+
+@shared_task
+def generate_report_pdf(report_id):
     """
-    مهمة Celery لتوليد تقرير PDF بشكل غير متزامن (محاكاة).
+    Task to generate PDF report for a completed Scan.
     """
     try:
         report = Report.objects.get(id=report_id)
         scan = report.scan
-        report.status = 'GENERATING'
+        vulnerabilities = scan.vulnerabilities.all()  # because of related_name='vulnerabilities'
+
+        # Folder path
+        reports_dir = os.path.join(settings.MEDIA_ROOT, "reports")
+        os.makedirs(reports_dir, exist_ok=True)
+
+        # File path
+        file_path = os.path.join(reports_dir, f"scan_report_{scan.id}.pdf")
+
+        # Start generating PDF
+        c = canvas.Canvas(file_path)
+        y = 800
+
+        # Title
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(50, y, f"Security Scan Report - Scan #{scan.id}")
+        y -= 40
+
+        # Scan info
+        c.setFont("Helvetica", 12)
+        c.drawString(50, y, f"Target URL: {scan.profile.target_url}")
+        y -= 20
+        c.drawString(50, y, f"Scan Status: {scan.status}")
+        y -= 40
+
+        # Vulnerabilities section
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(50, y, "Detected Vulnerabilities:")
+        y -= 30
+
+        c.setFont("Helvetica", 11)
+
+        if not vulnerabilities.exists():
+            c.drawString(50, y, "No vulnerabilities found.")
+            y -= 20
+        else:
+            for vul in vulnerabilities:
+                if y < 100:  # Avoid writing at bottom edge
+                    c.showPage()
+                    y = 800
+                    c.setFont("Helvetica", 11)
+
+                c.drawString(50, y, f"- {vul.name} ({vul.severity})")
+                y -= 15
+
+                c.drawString(70, y, f"Description: {vul.description[:90]}")
+                y -= 15
+
+                c.drawString(70, y, f"Fixed: {'Yes' if vul.is_fixed else 'No'}")
+                y -= 25
+
+        c.showPage()
+        c.save()
+
+        # Save file in model
+        relative_path = f"reports/scan_report_{scan.id}.pdf"
+        report.file.name = relative_path
+        report.status = "READY"
         report.save()
 
-        # 1. جمع البيانات
-        vulnerabilities = scan.vulnerability_set.all()
-        
-        # 2. محاكاة توليد محتوى التقرير (نصي بدلاً من PDF)
-        content = f"--- Security Scan Report (ID: {scan.id}) ---\n"
-        content += f"Target URL: {scan.profile.target_url}\n"
-        content += f"Status: {scan.status}\n"
-        content += f"Total Vulnerabilities Found: {vulnerabilities.count()}\n\n"
-        
-        for vuln in vulnerabilities:
-            content += f"- Severity: {vuln.severity} | Name: {vuln.name} | Description: {vuln.description[:50]}...\n"
-            
-        # 3. حفظ الملف في مجلد MEDIA_ROOT
-        # نستخدم اسم ملف فريد لتجنب التعارض
-        unique_id = uuid.uuid4().hex[:8]
-        file_name = f"report_{scan.id}_{unique_id}.txt" 
-        
-        # تحديد مسار التخزين
-        report_dir = os.path.join(settings.MEDIA_ROOT, 'reports')
-        os.makedirs(report_dir, exist_ok=True) # إنشاء المجلد إذا لم يكن موجوداً
-        file_path = os.path.join(report_dir, file_name)
-        
-        with open(file_path, "w", encoding="utf-8") as f:
-            f.write(content)
-        
-        # 4. تحديث سجل التقرير
-        report.file_path = f"{settings.MEDIA_URL}reports/{file_name}" # حفظ المسار القابل للوصول عبر الويب
-        report.status = 'COMPLETED'
-        report.generated_at = timezone.now()
-        report.save()
-        
-        return f"Report {report_id} generated successfully."
+        return f"Report generated: {relative_path}"
 
-    except Report.DoesNotExist:
-        return "Report ID not found."
-    except Exception as exc:
-        if 'report' in locals():
-            report.status = 'FAILED'
-            report.save()
-        raise self.retry(exc=exc, countdown=60) # لإعادة محاولة المهمة في حالة الفشل
+    except Exception as e:
+        report.status = "FAILED"
+        report.save()
+        return str(e)

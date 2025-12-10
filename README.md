@@ -1,130 +1,247 @@
+# 📝 **README – Developer Setup Guide**
 
-# 🛡️ Web Security Platform Backend
+> This guide helps new developers set up and run the Web Security Platform (WSP) on their own machine.
 
-This repository contains the backend implementation for a comprehensive Web Security Testing Platform, built using **Django** and **Django Rest Framework (DRF)**.
+---
 
-The system is designed to handle user roles (Testers, Admins, Clients), schedule security scans, and manage vulnerability reports, following the provided Use Case and Sequence Diagrams.
+## ⚠️ **Important Notice (MUST READ)**
 
-## 🚀 Getting Started
+### **You MUST install Docker before running the project.**
 
-Follow these steps to set up the project locally and start development.
+Docker is required to run Redis, which is needed for Celery background tasks.
 
-### 1. Prerequisites
+👉 Download Docker Desktop:
+**[https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)**
 
-Before starting, ensure you have the following installed on your system:
+---
 
-* **Python (3.9+)**
-* **Git**
-* **PostgreSQL** (Database server must be running)
-
-### 2. Clone the Repository
-
-Clone the project from GitHub and navigate into the directory:
+# 🚀 **1. Clone the Project**
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone https://github.com/Yehia-ashour/web-security-platform/tree/main
 cd web-security-platform
-````
-
-### 3\. Setup Virtual Environment
-
-Create and activate a Python virtual environment to manage dependencies:
-
-```bash
-# Create the environment
-python -m venv venv
-
-# Activate the environment (Linux/macOS)
-source venv/bin/activate
-
-# Activate the environment (Windows)
-# .\venv\Scripts\activate
 ```
 
-### 4\. Install Dependencies
+---
 
-Install all necessary Python packages (Django, DRF, psycopg2, etc.). **Make sure to run `pip freeze > requirements.txt` and push that file first.**
+# 🐍 **2. Create a Virtual Environment**
+
+> ⚠️ Celery is NOT compatible with Python 3.14.
+> You MUST use **Python 3.10 or Python 3.11**.
+
+### Create venv:
+
+```bash
+python -m venv venv
+```
+
+### Activate it:
+
+**Windows:**
+
+```bash
+venv\Scripts\activate
+```
+
+**Mac/Linux:**
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+# 📦 **3. Install Dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 5\. Configure Local Secrets (`.env` file)
+---
 
-You must create a local environment file to hold sensitive information, as it is ignored by Git.
+# 🐳 **4. Start Redis Using Docker**
 
-1.  Create a file named **`.env`** in the project's root directory.
+Redis is required for Celery tasks.
 
-2.  Add the following required variables (Get the `SECRET_KEY` from the Project Leader):
+```bash
+docker run -d --name redis-server -p 6379:6379 redis
+```
 
-    ```
-    SECRET_KEY='YOUR_ACTUAL_SECRET_KEY_HERE'
+Check if it’s running:
 
-    # Local PostgreSQL Settings
-    # NOTE: You must create this database in your PostgreSQL server manually.
-    DATABASE_NAME='web_security_db'
-    DATABASE_USER='your_local_pg_user'
-    DATABASE_PASSWORD='your_local_pg_password'
-    DATABASE_HOST='localhost'
-    DATABASE_PORT=5432
-    ```
+```bash
+docker ps
+```
 
-### 6\. Database Setup and Migrations
+---
 
-Ensure your local PostgreSQL server is running and the database specified in the `.env` file is created.
-
-Then, run the Django migrations:
+# 🌐 **5. Run Django Server**
 
 ```bash
 python manage.py migrate
-```
-
-### 7\. Create a Superuser
-
-Create an administrative user for testing the Django Admin interface:
-
-```bash
-python manage.py createsuperuser
-```
-
-### 8\. Run the Development Server
-
-Start the Django local server:
-
-```bash
 python manage.py runserver
 ```
 
-The API will be running at `http://127.0.0.1:8000/`.
-
-## ⚙️ API Endpoints
-
-The project uses Django Rest Framework. Key API endpoints include:
-
-| Functionality | Endpoint | HTTP Method | Authentication |
-| :--- | :--- | :--- | :--- |
-| **Login / Token Generation** | `/api/token/` | `POST` | None |
-| **Token Refresh** | `/api/token/refresh/` | `POST` | None |
-| **Create/List Test Profiles** | `/api/scanning/profiles/` | `GET`, `POST` | Token Required |
-| **Manage Users (Admin Only)** | `/api/users/...` | `GET`, `POST`, etc. | Role-Based |
-| **View Scans & Results** | `/api/scanning/scans/...` | `GET` | Role-Based |
-
-## 🛠️ Key Libraries Used
-
-  * **Django:** Core Web Framework.
-  * **Django Rest Framework (DRF):** For building the RESTful API.
-  * **`psycopg2`:** PostgreSQL database adapter.
-  * **`djangorestframework-simplejwt`:** For Token-based Authentication (JWT).
-  * **`python-decouple`:** For managing environment variables securely.
-
-## 🧑‍💻 Contribution Guide
-
-1.  Always work on a feature branch (e.g., `git checkout -b feature/implement-permissions`).
-2.  Commit frequently with clear messages.
-3.  Ensure your code adheres to Python standards (PEP 8).
-4.  Submit a Pull Request to the `main` branch once the feature is complete and tested.
-
-<!-- end list -->
+Server URL:
 
 ```
+http://127.0.0.1:8000/
 ```
+
+---
+
+# 🧵 **6. Start Celery Worker**
+
+Open a new terminal (with venv activated):
+
+```bash
+celery -A WSP worker --loglevel=info
+```
+
+If Celery starts correctly, you'll see:
+
+```
+celery worker ready.
+```
+
+---
+
+# 🧪 **7. Test the API**
+
+## 7.1 Get JWT Token
+
+```
+POST /api/token/
+```
+
+Body:
+
+```json
+{
+  "username": "your_username",
+  "password": "your_password"
+}
+```
+
+## 7.2 Create a Test Profile
+
+```
+POST /api/scanning/profiles/
+```
+
+```json
+{
+  "name": "Basic Scan",
+  "target_url": "https://example.com"
+}
+```
+
+## 7.3 Run a Scan
+
+```
+POST /api/scanning/profiles/1/run_scan/
+```
+
+Expected response:
+
+```json
+{
+  "status": "Scan initiated successfully",
+  "scan_id": 1
+}
+```
+
+Celery terminal will show:
+
+```
+Task received...
+Task started...
+Task completed...
+```
+
+---
+
+# 📂 **8. Project Structure Overview**
+
+```
+scanning/
+│   models.py          # TestProfile, Scan, Vulnerability
+│   views.py           # API endpoints
+│   serializers.py     # JSON converters
+│   tasks.py           # Celery scan logic
+│   urls.py
+│
+reporting/
+│   models.py
+│   tasks.py           # PDF report generation (future)
+│
+users/
+│   models.py          # Custom user model + roles
+│   permissions.py     # Role-based access
+│
+WSP/
+    settings.py
+    celery.py          # Celery app configuration
+    urls.py
+```
+
+---
+
+# 📌 **9. Recommended Tasks for New Developer**
+
+These are safe tasks the junior developer can work on:
+
+### ✅ Task 1 — Write basic unit tests
+
+For:
+
+* Profiles API
+* Scans API
+
+### ✅ Task 2 — Improve serializers
+
+Add validation, clean-up, required checks.
+
+### ✅ Task 3 — API Documentation
+
+Write a simple Markdown file describing all endpoints.
+
+### ✅ Task 4 — Improve error handling
+
+Example:
+
+* URL validation
+* Scan failure messages
+
+### ✅ Task 5 — Add filtering in list APIs
+
+Filter scans by status, filter vulnerabilities by severity.
+
+---
+
+# 🛠️ **10. Troubleshooting**
+
+### ❗ Celery error: “not enough values to unpack”
+
+Cause: using Python 3.14
+Solution: use **Python 3.10 or 3.11**
+
+---
+
+# 🎉 **Welcome to the Project!**
+
+If you face any issue:
+
+* Take a screenshot
+* Send the exact error message
+
+We will guide you step-by-step.
+
+---
+
+## ⭐ Want a shorter version for beginners?
+
+Just tell me and I'll generate it.
+
+---
+

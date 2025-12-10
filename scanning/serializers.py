@@ -32,7 +32,37 @@ class ScanSerializer(serializers.ModelSerializer):
     profile_name = serializers.CharField(source='profile.name', read_only=True)
     scheduled_by_username = serializers.CharField(source='scheduled_by.username', read_only=True)
 
+    # NEW → URL to download the PDF if exists
+    report_download_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Scan
-        fields = ['id', 'profile', 'profile_name', 'status', 'start_time', 'end_time', 'scheduled_by_username', 'vulnerabilities']
-        read_only_fields = ['scheduled_by_username']
+        fields = [
+            'id',
+            'profile',
+            'profile_name',
+            'status',
+            'start_time',
+            'end_time',
+            'scheduled_by_username',
+            'vulnerabilities',
+            'report_download_url',
+        ]
+
+    def get_report_download_url(self, obj):
+        """
+        Returns URL for the report PDF if exists.
+        """
+        request = self.context.get('request')
+
+        # If no report yet → return None
+        if not hasattr(obj, "report"):
+            return None
+
+        report = obj.report
+
+        if not report.file:
+            return None
+        
+        # Build absolute download URL
+        return request.build_absolute_uri(report.file.url)
