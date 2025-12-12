@@ -1,4 +1,4 @@
-# 📝 **README – Developer Setup Guide**
+📝 **README – Developer Setup Guide**
 
 > This guide helps new developers set up and run the Web Security Platform (WSP) on their own machine.
 
@@ -18,7 +18,11 @@ Docker is required to run Redis, which is needed for Celery background tasks.
 # 🚀 **1. Clone the Project**
 
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/Yehia-ashour/web-security-platform/tree/main
+=======
+git clone https://github.com/[YOUR_REPO_URL.git](https://github.com/Yehia-ashour/web-security-platform/tree/main)
+>>>>>>> eeb7559634bec4b0e95f7ab51f6e74aebdb3e149
 cd web-security-platform
 ```
 
@@ -244,4 +248,7 @@ We will guide you step-by-step.
 Just tell me and I'll generate it.
 
 ---
+<<<<<<< HEAD
 
+=======
+>>>>>>> eeb7559634bec4b0e95f7ab51f6e74aebdb3e149
