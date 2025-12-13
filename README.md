@@ -161,7 +161,7 @@ http://127.0.0.1:8000/api/schema/swagger-ui/
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/<your-username>/web-security-platform.git
+git clone https://github.com/Yehia-ashour/web-security-platform.git
 cd web-security-platform
 ```
 
@@ -189,7 +189,7 @@ pip install -r requirements.txt
 Create a `.env` file:
 
 ```
-SECRET_KEY=your-secret-key
+SECRET_KEY=Secret-key
 ```
 
 ---
