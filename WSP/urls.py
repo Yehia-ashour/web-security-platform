@@ -18,8 +18,8 @@ urlpatterns = [
     # Scanning module
     path('api/scanning/', include('scanning.urls')),
 
-    # (Optional) Reporting module if we add URLs later
-    # path('api/reporting/', include('reporting.urls')),
+    # Reporting module if we add URLs later
+    path('api/reporting/', include('reporting.urls')),
 ]
 
 # Serve media files (PDF reports)

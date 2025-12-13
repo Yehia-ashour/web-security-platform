@@ -13,9 +13,6 @@ GET http://127.0.0.1:8000/api/scanning/scans/
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjM3MzE3LCJpYXQiOjE3NjUyMzM3MTcsImp0aSI6Ijg2N2E0ODA2YTFiMDQzOWJiNDc3YjRmNmU4ZTQ2YjgwIiwidXNlcl9pZCI6IjEifQ.1Lwh6cr_KXBTdabunqx925yvB_-zAuiUg1k6jUZu8jk
 
 
-### Get scanning profiles (protected)
-POST http://127.0.0.1:8000/api/scanning/profiles/<1>/run_scan/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjM3MzE3LCJpYXQiOjE3NjUyMzM3MTcsImp0aSI6Ijg2N2E0ODA2YTFiMDQzOWJiNDc3YjRmNmU4ZTQ2YjgwIiwidXNlcl9pZCI6IjEifQ.1Lwh6cr_KXBTdabunqx925yvB_-zAuiUg1k6jUZu8jk
 
 ### Get scanning profiles (protected)
 GET http://127.0.0.1:8000/api/scanning/profiles/
@@ -29,5 +26,34 @@ Content-Type: application/json
 
 {
     "name": "Basic Scan",
-    "description": "https://example.com"
+    "target_url": "https://example.com"
 }
+
+### Get scanning profiles (protected)
+POST http://127.0.0.1:8000/api/scanning/profiles/1/run_scan/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1MjM4NTY1LCJpYXQiOjE3NjUyMzQ5NjUsImp0aSI6IjQ0NTJmNTczZmRmZjRkYzRiYzU4NmZiYWNjY2ZiYzVjIiwidXNlcl9pZCI6IjEifQ.xq1vC9NbVdckmg9s3KqspHBYrGmZJdEVuMvGrMTFjUI
+Content-Type: application/json
+
+### Get scanning profiles (protected)
+POST /api/scanning/profiles/1/run_scan/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NTgzODE0LCJpYXQiOjE3NjU1ODAyMTQsImp0aSI6IjA2NjNiNmEyYzllMjRlZmFiZTczOWQ5MTkyZWRmMDgzIiwidXNlcl9pZCI6IjEifQ.tsxBV8fuZlZ4faayt3JDt-Q9Lh98QVZqtVQ9767qVCA
+
+
+### Get scanning profiles (protected)
+POST http://127.0.0.1:8000/api/scanning/scans/2/export_report/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NTg0ODQxLCJpYXQiOjE3NjU1ODEyNDEsImp0aSI6IjUzOTNhY2Q3YmNkMTQwN2E4MzZlYTM2ZDJjZmE3N2M2IiwidXNlcl9pZCI6IjEifQ.Dum8bHfrFyxU4l3ZZLcEzzKFUO7CuvsvYf4h5FVT2PA
+Content-Type: application/json
+
+
+### Get scanning profiles (protected)
+POST http://127.0.0.1:8000/api/scanning/scans/2/export_report/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NTgzODE0LCJpYXQiOjE3NjU1ODAyMTQsImp0aSI6IjA2NjNiNmEyYzllMjRlZmFiZTczOWQ5MTkyZWRmMDgzIiwidXNlcl9pZCI6IjEifQ.tsxBV8fuZlZ4faayt3JDt-Q9Lh98QVZqtVQ9767qVCA
+Content-Type: application/json
+
+### Get scanning profiles (protected)
+GET http://127.0.0.1:8000/api/scanning/scans/2/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NTg0ODQxLCJpYXQiOjE3NjU1ODEyNDEsImp0aSI6IjUzOTNhY2Q3YmNkMTQwN2E4MzZlYTM2ZDJjZmE3N2M2IiwidXNlcl9pZCI6IjEifQ.Dum8bHfrFyxU4l3ZZLcEzzKFUO7CuvsvYf4h5FVT2PA
+
+### Get scanning profiles (protected)
+GET http://127.0.0.1:8000/api/reporting/reports/
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzY1NTg0ODQxLCJpYXQiOjE3NjU1ODEyNDEsImp0aSI6IjUzOTNhY2Q3YmNkMTQwN2E4MzZlYTM2ZDJjZmE3N2M2IiwidXNlcl9pZCI6IjEifQ.Dum8bHfrFyxU4l3ZZLcEzzKFUO7CuvsvYf4h5FVT2PA

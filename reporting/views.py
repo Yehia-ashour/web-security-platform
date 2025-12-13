@@ -1,48 +1,26 @@
+# reporting/views.py
+from rest_framework import viewsets
 from reporting.models import Report
-from reporting.tasks import generate_report_pdf
-from rest_framework.decorators import action
-from rest_framework import status
-from rest_framework.response import Response
+from reporting.serializers import ReportSerializer
+from users.permissions import IsSecurityTesterOrAdmin, IsClientOrManager
+from scanning.models import Scan
 
 
-class ScanViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
-    
-    ...
+class ReportViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Read-only API for viewing generated reports.
+    """
+    serializer_class = ReportSerializer
+    permission_classes = [IsSecurityTesterOrAdmin | IsClientOrManager]
 
-    @action(detail=True, methods=['post'])
-    def export_report(self, request, pk=None):
-        try:
-            scan = self.get_object()
+    def get_queryset(self):
+        user = self.request.user
 
-            # Prevent generating duplicate reports
-            if hasattr(scan, "report"):
-                return Response(
-                    {
-                        "error": "Report already exists for this scan.",
-                        "report_id": scan.report.id,
-                        "status": scan.report.status
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        if user.role in ['tester', 'admin']:
+            return Report.objects.all().order_by('-generated_at')
 
-            # Create new Report record
-            report = Report.objects.create(
-                scan=scan,
-                report_type='PDF',
-                status="PENDING"
-            )
+        elif user.role == 'client':
+            client_scans = Scan.objects.filter(profile__created_by=user)
+            return Report.objects.filter(scan__in=client_scans).order_by('-generated_at')
 
-            # Run Celery task
-            generate_report_pdf.delay(report.id)
-
-            return Response(
-                {
-                    "message": "Report generation started.",
-                    "report_id": report.id,
-                    "status": "PENDING"
-                },
-                status=status.HTTP_202_ACCEPTED
-            )
-
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Report.objects.none()

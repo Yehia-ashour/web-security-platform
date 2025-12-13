@@ -5,9 +5,7 @@ import time
 import random
 from django.utils import timezone
 
-# ----------------------------------------------------
-# المهمة الرئيسية لتشغيل المسح في الخلفية
-# ----------------------------------------------------
+
 @shared_task(bind=True)
 def run_security_scan(self, scan_id):
     """
@@ -16,17 +14,14 @@ def run_security_scan(self, scan_id):
     try:
         scan = Scan.objects.get(id=scan_id)
         
-        # 1. تحديث حالة المسح (بدأ التشغيل)
         scan.status = 'running'
         scan.start_time = timezone.now()
         scan.save()
 
-        # 2. محاكاة عملية المسح الفعلية (هنا يتم استدعاء محرك الفحص الخارجي مستقبلاً)
-        # نستخدم هنا محاكاة بسيطة للوقت والنتائج
-        print(f"Starting deep scan for: {scan.profile.target_url}")
-        time.sleep(random.randint(5, 10)) # محاكاة انتظار المسح
 
-        # 3. محاكاة إنشاء النتائج (الثغرات)
+        print(f"Starting deep scan for: {scan.profile.target_url}")
+        time.sleep(random.randint(5, 10)) 
+
         vulnerability_count = random.randint(2, 5)
         
         for i in range(vulnerability_count):
@@ -38,7 +33,6 @@ def run_security_scan(self, scan_id):
                 is_fixed=False
             )
 
-        # 4. تحديث حالة المسح (اكتمل بنجاح)
         scan.status = 'completed'
         scan.end_time = timezone.now()
         scan.save()
@@ -49,7 +43,6 @@ def run_security_scan(self, scan_id):
         print(f"Scan ID {scan_id} not found.")
         return "Scan ID not found."
     except Exception as exc:
-        # هنا يمكنك استخدام self.retry() لإعادة المحاولة إذا فشل المسح
         scan.status = 'failed'
         scan.save()
         raise self.retry(exc=exc, countdown=60)

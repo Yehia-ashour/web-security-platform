@@ -1,5 +1,5 @@
 # scanning/views.py
-from rest_framework import viewsets, status, mixins, generics
+from rest_framework import viewsets, status, mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -72,6 +72,15 @@ class ScanViewSet(viewsets.GenericViewSet, mixins.RetrieveModelMixin, mixins.Lis
     def export_report(self, request, pk=None):
         try:
             scan = self.get_object()
+
+            if hasattr(scan, "report"):
+                return Response({
+                    "error": "Report already exists for this scan.",
+                    "report_id": scan.report.id,
+                    "status": scan.report.status,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
             report = Report.objects.create(
                 scan=scan,
