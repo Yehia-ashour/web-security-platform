@@ -1,254 +1,209 @@
-📝 **README – Developer Setup Guide**
+```markdown
+# 🛡️ Web Security Platform (WSP)
 
-> This guide helps new developers set up and run the Web Security Platform (WSP) on their own machine.
-
----
-
-## ⚠️ **Important Notice (MUST READ)**
-
-### **You MUST install Docker before running the project.**
-
-Docker is required to run Redis, which is needed for Celery background tasks.
-
-👉 Download Docker Desktop:
-**[https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)**
+A scalable web-based platform for automated security testing of web applications.  
+The platform allows users to submit a target URL, run asynchronous security scans, detect vulnerabilities, and generate downloadable security reports.
 
 ---
 
-# 🚀 **1. Clone the Project**
+## 🚀 Project Overview
 
+Web Security Platform (WSP) is designed to help developers and small teams perform automated web security assessments without requiring deep security expertise.
+
+The system focuses on:
+- Asynchronous security scanning
+- Role-based access control
+- Clean RESTful APIs
+- Report generation and file delivery
+- Future integration with external security testing engines
+
+---
+
+## 🧠 System Architecture
+
+The platform follows a **modular and scalable architecture**:
+
+- **Backend:** Django + Django REST Framework
+- **Authentication:** JWT (SimpleJWT)
+- **Async Tasks:** Celery + Redis
+- **Database:** SQLite (development) → PostgreSQL (production-ready)
+- **Reports:** Generated as PDF files and served via media endpoints
+
+### Core Modules
+
+| Module | Responsibility |
+|------|---------------|
+| `users` | Authentication, roles, permissions |
+| `scanning` | Scan lifecycle, vulnerabilities, async execution |
+| `reporting` | Report storage and read-only access |
+| `security engine` | External (planned integration) |
+
+---
+
+## 🔐 Authentication & Roles
+
+The system uses **JWT authentication** with role-based permissions.
+
+### Supported Roles
+- **Admin**
+- **Security Tester**
+- **Client**
+
+Each role has controlled access to scans, vulnerabilities, and reports.
+
+---
+
+## 🔄 Scan & Report Flow
+
+1. User creates a **Test Profile** with a target URL
+2. User triggers a **Scan**
+3. Scan runs asynchronously using **Celery**
+4. Vulnerabilities are collected
+5. A **Report** is generated asynchronously
+6. A **PDF report** becomes available for download
+
+---
+
+## 📡 API Flow Summary
+
+### Authentication
+```
+
+POST /api/token/
+POST /api/token/refresh/
+
+```
+
+### Scanning
+```
+
+POST /api/scanning/profiles/
+POST /api/scanning/profiles/{id}/run_scan/
+GET  /api/scanning/scans/
+GET  /api/scanning/scans/{id}/
+POST /api/scanning/scans/{id}/export_report/
+
+```
+
+### Reporting
+```
+
+GET /api/reporting/reports/
+GET /api/reporting/reports/{id}/
+
+````
+
+Each report includes a direct `download_url` for the generated PDF.
+
+---
+
+## 📄 Reports
+
+- Reports are generated asynchronously
+- Stored as PDF files under `/media/reports/`
+- Each scan has **one report only**
+- Download is handled via a secure media endpoint
+
+---
+
+## 🔌 Security Engine Integration (Planned)
+
+The platform is designed to integrate with **external security testing engines**.
+
+### Current State
+- Security scanning is simulated
+- Vulnerability data structure is finalized
+- Async execution pipeline is ready
+
+### Planned Integration
+- External security tools (e.g. OWASP ZAP, custom scripts)
+- Deployed independently on a server
+- Triggered via Celery tasks
+- Results parsed and stored in the platform database
+
+This design allows replacing the simulated scan logic with real-world security engines **without changing the API or database structure**.
+
+---
+
+## 🧩 Team Integration Guide
+
+### 🔐 Security Team
+The security engine should provide:
+- Vulnerability name
+- Description
+- Severity (Critical / High / Medium / Low)
+- Affected endpoint or component
+
+The backend will handle:
+- Execution
+- Storage
+- Reporting
+- Permissions
+
+---
+
+### 🎨 Frontend Team
+The frontend can start immediately using the provided APIs.
+
+Frontend responsibilities:
+- Authentication flow (JWT)
+- Profile creation
+- Scan triggering
+- Scan status tracking
+- Report listing
+- PDF download via `download_url`
+
+All endpoints are stable and documented above.
+
+---
+
+## ⚙️ Local Setup
+
+### Requirements
+- Python 3.10+ (recommended)
+- Redis
+- Docker (optional, recommended)
+
+### Installation
 ```bash
-<<<<<<< HEAD
-git clone https://github.com/Yehia-ashour/web-security-platform/tree/main
-=======
-git clone https://github.com/[YOUR_REPO_URL.git](https://github.com/Yehia-ashour/web-security-platform/tree/main)
->>>>>>> eeb7559634bec4b0e95f7ab51f6e74aebdb3e149
+git clone https://github.com/Yehia-ashour/web-security-platform.git
 cd web-security-platform
-```
-
----
-
-# 🐍 **2. Create a Virtual Environment**
-
-> ⚠️ Celery is NOT compatible with Python 3.14.
-> You MUST use **Python 3.10 or Python 3.11**.
-
-### Create venv:
-
-```bash
-python -m venv venv
-```
-
-### Activate it:
-
-**Windows:**
-
-```bash
-venv\Scripts\activate
-```
-
-**Mac/Linux:**
-
-```bash
-source venv/bin/activate
-```
-
----
-
-# 📦 **3. Install Dependencies**
-
-```bash
 pip install -r requirements.txt
-```
+````
 
----
-
-# 🐳 **4. Start Redis Using Docker**
-
-Redis is required for Celery tasks.
+### Run Redis
 
 ```bash
-docker run -d --name redis-server -p 6379:6379 redis
+redis-server
 ```
 
-Check if it’s running:
-
-```bash
-docker ps
-```
-
----
-
-# 🌐 **5. Run Django Server**
+### Run Django
 
 ```bash
 python manage.py migrate
 python manage.py runserver
 ```
 
-Server URL:
-
-```
-http://127.0.0.1:8000/
-```
-
----
-
-# 🧵 **6. Start Celery Worker**
-
-Open a new terminal (with venv activated):
+### Run Celery
 
 ```bash
-celery -A WSP worker --loglevel=info
-```
-
-If Celery starts correctly, you'll see:
-
-```
-celery worker ready.
+celery -A WSP worker --loglevel=info --pool=solo
 ```
 
 ---
 
-# 🧪 **7. Test the API**
+## 🧪 Development Notes
 
-## 7.1 Get JWT Token
-
-```
-POST /api/token/
-```
-
-Body:
-
-```json
-{
-  "username": "your_username",
-  "password": "your_password"
-}
-```
-
-## 7.2 Create a Test Profile
-
-```
-POST /api/scanning/profiles/
-```
-
-```json
-{
-  "name": "Basic Scan",
-  "target_url": "https://example.com"
-}
-```
-
-## 7.3 Run a Scan
-
-```
-POST /api/scanning/profiles/1/run_scan/
-```
-
-Expected response:
-
-```json
-{
-  "status": "Scan initiated successfully",
-  "scan_id": 1
-}
-```
-
-Celery terminal will show:
-
-```
-Task received...
-Task started...
-Task completed...
-```
+* SQLite is used for development
+* PostgreSQL migration is planned
+* Media files are served only in DEBUG mode
 
 ---
 
-# 📂 **8. Project Structure Overview**
+## 📌 Project Status
 
-```
-scanning/
-│   models.py          # TestProfile, Scan, Vulnerability
-│   views.py           # API endpoints
-│   serializers.py     # JSON converters
-│   tasks.py           # Celery scan logic
-│   urls.py
-│
-reporting/
-│   models.py
-│   tasks.py           # PDF report generation (future)
-│
-users/
-│   models.py          # Custom user model + roles
-│   permissions.py     # Role-based access
-│
-WSP/
-    settings.py
-    celery.py          # Celery app configuration
-    urls.py
-```
-
----
-
-# 📌 **9. Recommended Tasks for New Developer**
-
-These are safe tasks the junior developer can work on:
-
-### ✅ Task 1 — Write basic unit tests
-
-For:
-
-* Profiles API
-* Scans API
-
-### ✅ Task 2 — Improve serializers
-
-Add validation, clean-up, required checks.
-
-### ✅ Task 3 — API Documentation
-
-Write a simple Markdown file describing all endpoints.
-
-### ✅ Task 4 — Improve error handling
-
-Example:
-
-* URL validation
-* Scan failure messages
-
-### ✅ Task 5 — Add filtering in list APIs
-
-Filter scans by status, filter vulnerabilities by severity.
-
----
-
-# 🛠️ **10. Troubleshooting**
-
-### ❗ Celery error: “not enough values to unpack”
-
-Cause: using Python 3.14
-Solution: use **Python 3.10 or 3.11**
-
----
-
-# 🎉 **Welcome to the Project!**
-
-If you face any issue:
-
-* Take a screenshot
-* Send the exact error message
-
-We will guide you step-by-step.
-
----
-
-## ⭐ Want a shorter version for beginners?
-
-Just tell me and I'll generate it.
-
----
-<<<<<<< HEAD
-
-=======
->>>>>>> eeb7559634bec4b0e95f7ab51f6e74aebdb3e149
+* Backend core: ✅ Completed
+* Async scanning: ✅ Completed
+* Reporting system: ✅ Completed
+* Security engine: 🔄 In progress
+* Frontend integration: 🔄 In progress
