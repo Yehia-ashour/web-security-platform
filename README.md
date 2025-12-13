@@ -1,190 +1,208 @@
-```markdown
-# 🛡️ Web Security Platform (WSP)
+---
 
-A scalable web-based platform for automated security testing of web applications.  
-The platform allows users to submit a target URL, run asynchronous security scans, detect vulnerabilities, and generate downloadable security reports.
+# 🛡️ Web Security Platform (BUGGY)
+
+A scalable web-based platform for **automated security testing of web applications**, designed to help developers and small teams identify common web vulnerabilities without requiring deep security expertise.
 
 ---
 
-## 🚀 Project Overview
+## 📌 Project Overview
 
-Web Security Platform (WSP) is designed to help developers and small teams perform automated web security assessments without requiring deep security expertise.
+The **Web Security Platform (BUGGY)** allows users to:
 
-The system focuses on:
-- Asynchronous security scanning
-- Role-based access control
-- Clean RESTful APIs
-- Report generation and file delivery
-- Future integration with external security testing engines
+* Create security test profiles for web applications.
+* Run automated security scans asynchronously.
+* Detect common web vulnerabilities (simulated for development).
+* Generate **professional branded PDF security reports**.
+* Access scan history and vulnerability details through a REST API.
 
----
-
-## 🧠 System Architecture
-
-The platform follows a **modular and scalable architecture**:
-
-- **Backend:** Django + Django REST Framework
-- **Authentication:** JWT (SimpleJWT)
-- **Async Tasks:** Celery + Redis
-- **Database:** SQLite (development) → PostgreSQL (production-ready)
-- **Reports:** Generated as PDF files and served via media endpoints
-
-### Core Modules
-
-| Module | Responsibility |
-|------|---------------|
-| `users` | Authentication, roles, permissions |
-| `scanning` | Scan lifecycle, vulnerabilities, async execution |
-| `reporting` | Report storage and read-only access |
-| `security engine` | External (planned integration) |
+The platform is built with a **modular backend architecture**, making it extensible for future integration with real-world security scanners such as **OWASP ZAP**.
 
 ---
 
-## 🔐 Authentication & Roles
-
-The system uses **JWT authentication** with role-based permissions.
-
-### Supported Roles
-- **Admin**
-- **Security Tester**
-- **Client**
-
-Each role has controlled access to scans, vulnerabilities, and reports.
-
----
-
-## 🔄 Scan & Report Flow
-
-1. User creates a **Test Profile** with a target URL
-2. User triggers a **Scan**
-3. Scan runs asynchronously using **Celery**
-4. Vulnerabilities are collected
-5. A **Report** is generated asynchronously
-6. A **PDF report** becomes available for download
-
----
-
-## 📡 API Flow Summary
-
-### Authentication
-```
-
-POST /api/token/
-POST /api/token/refresh/
+## 🧩 System Architecture
 
 ```
-
-### Scanning
+Client (Frontend / API Consumer)
+        |
+        v
+ Django REST API (JWT Auth)
+        |
+        +-- Scanning Module
+        |     - Test Profiles
+        |     - Scan Management
+        |     - Vulnerabilities
+        |
+        +-- Reporting Module
+        |     - Asynchronous PDF Reports
+        |
+        +-- Celery + Redis
+              - Background Scan Execution
+              - PDF Generation
 ```
 
-POST /api/scanning/profiles/
-POST /api/scanning/profiles/{id}/run_scan/
-GET  /api/scanning/scans/
-GET  /api/scanning/scans/{id}/
-POST /api/scanning/scans/{id}/export_report/
+---
 
-```
+## ⚙️ Tech Stack
+
+### Backend
+
+* Python
+* Django
+* Django REST Framework
+* JWT Authentication (SimpleJWT)
+
+### Background Processing
+
+* Celery
+* Redis
+
+### Documentation
+
+* drf-spectacular (OpenAPI / Swagger UI)
+
+### Database
+
+* SQLite (Development)
+* PostgreSQL (Production-ready configuration)
 
 ### Reporting
+
+* ReportLab
+* Branded PDF reports with:
+
+  * Logo
+  * Severity summary
+  * Vulnerability table
+
+---
+
+## 🗄️ Database Strategy
+
+### SQLite (Development)
+
+* Simple and fast setup
+* Ideal for development and testing
+* No external dependencies
+
+### PostgreSQL (Production)
+
+* Production-grade database
+* Supports concurrent users
+* Strong transactional guarantees
+* Scalable and secure
+
+The project is **fully prepared to switch to PostgreSQL** using environment variables without changing application logic.
+
+```python
+# PostgreSQL configuration (ready for production)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': config('POSTGRES_DB'),
+#         'USER': config('POSTGRES_USER'),
+#         'PASSWORD': config('POSTGRES_PASSWORD'),
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 ```
 
-GET /api/reporting/reports/
-GET /api/reporting/reports/{id}/
+---
 
-````
+## 🔐 Authentication & Authorization
 
-Each report includes a direct `download_url` for the generated PDF.
+* JWT-based authentication
+* Role-based access control:
+
+  * Admin / Security Tester
+  * Client
+* Permissions enforced at API level
 
 ---
 
-## 📄 Reports
+## 🔄 Asynchronous Processing
 
-- Reports are generated asynchronously
-- Stored as PDF files under `/media/reports/`
-- Each scan has **one report only**
-- Download is handled via a secure media endpoint
+Long-running operations are executed in the background using **Celery**, preventing blocking requests.
 
----
+### Background Jobs
 
-## 🔌 Security Engine Integration (Planned)
-
-The platform is designed to integrate with **external security testing engines**.
-
-### Current State
-- Security scanning is simulated
-- Vulnerability data structure is finalized
-- Async execution pipeline is ready
-
-### Planned Integration
-- External security tools (e.g. OWASP ZAP, custom scripts)
-- Deployed independently on a server
-- Triggered via Celery tasks
-- Results parsed and stored in the platform database
-
-This design allows replacing the simulated scan logic with real-world security engines **without changing the API or database structure**.
+* Security scan execution
+* PDF report generation
 
 ---
 
-## 🧩 Team Integration Guide
+## 📄 PDF Security Reports
 
-### 🔐 Security Team
-The security engine should provide:
-- Vulnerability name
-- Description
-- Severity (Critical / High / Medium / Low)
-- Affected endpoint or component
+Each scan can generate a **professional PDF report** containing:
 
-The backend will handle:
-- Execution
-- Storage
-- Reporting
-- Permissions
+* Platform logo
+* Scan metadata
+* Severity counters (Critical / High / Medium / Low)
+* Vulnerabilities table
+* Branded footer
+
+Reports are generated asynchronously and served via `/media/`.
 
 ---
 
-### 🎨 Frontend Team
-The frontend can start immediately using the provided APIs.
+## 📑 API Documentation
 
-Frontend responsibilities:
-- Authentication flow (JWT)
-- Profile creation
-- Scan triggering
-- Scan status tracking
-- Report listing
-- PDF download via `download_url`
+Swagger UI (OpenAPI):
 
-All endpoints are stable and documented above.
+```
+http://127.0.0.1:8000/api/schema/swagger-ui/
+```
 
 ---
 
-## ⚙️ Local Setup
+## 🚀 How to Run the Project
 
-### Requirements
-- Python 3.10+ (recommended)
-- Redis
-- Docker (optional, recommended)
+### 1️⃣ Clone Repository
 
-### Installation
 ```bash
-git clone https://github.com/Yehia-ashour/web-security-platform.git
+git clone https://github.com/<your-username>/web-security-platform.git
 cd web-security-platform
-pip install -r requirements.txt
-````
+```
 
-### Run Redis
+---
+
+### 2️⃣ Create Virtual Environment
+
+```bash
+python -m venv venv
+venv\Scripts\activate   # Windows
+```
+
+---
+
+### 3️⃣ Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+### 4️⃣ Environment Variables
+
+Create a `.env` file:
+
+```
+SECRET_KEY=your-secret-key
+```
+
+---
+
+### 5️⃣ Run Redis
 
 ```bash
 redis-server
 ```
 
-### Run Django
+---
 
-```bash
-python manage.py migrate
-python manage.py runserver
-```
-
-### Run Celery
+### 6️⃣ Run Celery Worker
 
 ```bash
 celery -A WSP worker --loglevel=info --pool=solo
@@ -192,18 +210,206 @@ celery -A WSP worker --loglevel=info --pool=solo
 
 ---
 
-## 🧪 Development Notes
+### 7️⃣ Run Django Server
 
-* SQLite is used for development
-* PostgreSQL migration is planned
-* Media files are served only in DEBUG mode
+```bash
+python manage.py migrate
+python manage.py runserver
+```
 
 ---
 
-## 📌 Project Status
+## 👥 Team Responsibilities
 
-* Backend core: ✅ Completed
-* Async scanning: ✅ Completed
-* Reporting system: ✅ Completed
-* Security engine: 🔄 In progress
-* Frontend integration: 🔄 In progress
+### Backend
+
+* API design and implementation
+* Authentication & permissions
+* Background processing
+* PDF report generation
+* Database design
+
+### Security
+
+* Define vulnerability types
+* Provide detection logic
+* Prepare mitigation strategies
+
+### Frontend
+
+* Consume REST APIs
+* Display scans and reports
+* Handle authentication
+
+### UI/UX
+
+* User flow and experience
+* Visual consistency
+* Layout design
+
+---
+
+# 📦 Submission Guide
+
+This section explains **how frontend and security team members should integrate their work** with the backend.
+
+---
+
+## 🎨 Frontend Submission Guide
+
+### 🎯 Goal
+
+Build a user interface that consumes backend APIs to manage scans and view reports.
+
+---
+
+### 🔐 Authentication
+
+```
+POST /api/token/
+POST /api/token/refresh/
+```
+
+Use header:
+
+```
+Authorization: Bearer <access_token>
+```
+
+---
+
+### 🧪 Scanning Flow
+
+1. Create Test Profile
+
+```
+POST /api/scanning/profiles/
+```
+
+2. Run Scan
+
+```
+POST /api/scanning/profiles/{id}/run_scan/
+```
+
+3. View Scan History
+
+```
+GET /api/scanning/scans/
+```
+
+4. View Vulnerabilities
+
+```
+GET /api/scanning/vulnerabilities/
+```
+
+---
+
+### 📄 Reports
+
+* Generate report:
+
+```
+POST /api/scanning/scans/{id}/export_report/
+```
+
+* Get reports list:
+
+```
+GET /api/reporting/reports/
+```
+
+Each report includes a `download_url` for the PDF.
+
+---
+
+### 🎨 Frontend Responsibilities
+
+* Login / logout
+* Forms for test profiles
+* Scan status display
+* Vulnerability listing
+* PDF report download
+* Error handling (401 / 403 / 400)
+
+---
+
+## 🔐 Security Team Submission Guide
+
+### 🎯 Goal
+
+Provide the security logic and vulnerability definitions used by the platform.
+
+---
+
+### 📌 Required for Each Vulnerability
+
+1. Name
+2. Description
+3. How it occurs
+4. Impact
+5. Detection logic
+6. Mitigation / Fix
+
+---
+
+### 🔧 Integration Options
+
+#### Option 1️⃣ (Current – Simulated)
+
+* Vulnerabilities generated programmatically
+* Used to test platform flow
+
+#### Option 2️⃣ (Future – Recommended)
+
+* Integrate real scanners (OWASP ZAP)
+* Parse scan results into database models
+
+---
+
+### 📁 Expected Output Format
+
+```json
+{
+  "name": "SQL Injection",
+  "severity": "High",
+  "description": "User input is not sanitized",
+  "recommendation": "Use prepared statements"
+}
+```
+
+---
+
+## 🧠 Integration Notes
+
+* Backend APIs are stable
+* Database schema finalized
+* Swagger documentation available
+* PostgreSQL prepared for production
+
+---
+
+## 🔮 Future Improvements
+
+* Real vulnerability scanning (OWASP ZAP)
+* Dockerized deployment
+* PostgreSQL production setup
+* Frontend dashboard
+* PDF customization options
+
+---
+
+## 📜 License
+
+This project is developed for **educational purposes** as part of a graduation project.
+
+---
+
+## ✅ Project Status
+
+✔ Backend core complete
+✔ Asynchronous scanning
+✔ PDF reporting
+✔ API documentation
+✔ Ready for frontend & security integration
