@@ -1,48 +1,49 @@
 # scanning/tasks.py
 from celery import shared_task
 from .models import Scan, Vulnerability
-import time
-import random
+from .zap_client import ZAPClient  # <-- ZAPClient مش ZAPScanner
 from django.utils import timezone
-
 
 @shared_task(bind=True)
 def run_security_scan(self, scan_id):
-    """
-    تقوم بتشغيل عملية مسح أمنية طويلة الأمد (Async).
-    """
+    scan = None
     try:
         scan = Scan.objects.get(id=scan_id)
-        
         scan.status = 'running'
         scan.start_time = timezone.now()
         scan.save()
 
+        print(f'🚀 ZAP Scan: {scan.target_url}')
+        zap = ZAPClient()
+        alerts = zap.run_full_scan(scan.target_url)
 
-        print(f"Starting deep scan for: {scan.profile.target_url}")
-        time.sleep(random.randint(5, 10)) 
-
-        vulnerability_count = random.randint(2, 5)
-        
-        for i in range(vulnerability_count):
-            Vulnerability.objects.create(
-                scan=scan,
-                name=f"SQL Injection (Simulated #{i+1})",
-                description="Potential risk of unauthorized data access.",
-                severity=random.choice(['Critical', 'High', 'Medium']),
-                is_fixed=False
-            )
+        vuln_count = 0
+        for alert in alerts[:50]:
+            try:
+                Vulnerability.objects.create(
+                    scan=scan,
+                    alert=alert.get('alert', 'Unknown'),
+                    risk=alert.get('risk', 'Medium'),
+                    confidence=alert.get('confidence', 'Medium'),
+                    url=alert.get('url', ''),
+                    param=alert.get('param', ''),
+                    attack=alert.get('attack', ''),
+                    description=alert.get('description', '')[:500],
+                )
+                vuln_count += 1
+            except Exception as e:
+                print(f'Error saving vulnerability: {e}')
+                continue
 
         scan.status = 'completed'
         scan.end_time = timezone.now()
         scan.save()
-        
-        return f"Scan ID {scan_id} completed successfully with {vulnerability_count} vulnerabilities found."
+        print(f'✅ {vuln_count} vulnerabilities saved!')
+        return f'ZAP found {vuln_count} vulnerabilities'
 
-    except Scan.DoesNotExist:
-        print(f"Scan ID {scan_id} not found.")
-        return "Scan ID not found."
     except Exception as exc:
-        scan.status = 'failed'
-        scan.save()
+        print(f'❌ Error: {str(exc)}')
+        if scan:
+            scan.status = 'failed'
+            scan.save()
         raise self.retry(exc=exc, countdown=60)

@@ -1,6 +1,6 @@
 # scanning/serializers.py
 from rest_framework import serializers
-from .models import TestProfile, Scan, Vulnerability 
+from .models import ScanProfile, Scan, Vulnerability
 from urllib.parse import urlsplit, urlunsplit
 import ipaddress
 import socket
@@ -132,11 +132,11 @@ def normalize_and_validate_public_http_url(raw_url: str) -> str:
     return normalized 
 
 
-class TestProfileSerializer(serializers.ModelSerializer):
+class ScanProfileSerializer(serializers.ModelSerializer):
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
 
     class Meta:
-        model = TestProfile
+        model = ScanProfile
         fields = [
             'id',
             'name',
@@ -165,40 +165,20 @@ class VulnerabilitySerializer(serializers.ModelSerializer):
 
 class ScanSerializer(serializers.ModelSerializer):
     vulnerabilities = VulnerabilitySerializer(many=True, read_only=True)
-    profile_name = serializers.CharField(source='profile.name', read_only=True)
     scheduled_by_username = serializers.CharField(source='scheduled_by.username', read_only=True)
-
-    # NEW → URL to download the PDF if exists
-    report_download_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Scan
         fields = [
             'id',
-            'profile',
-            'profile_name',
+            'target_url',
             'status',
             'start_time',
             'end_time',
             'scheduled_by_username',
             'vulnerabilities',
-            'report_download_url',
         ]
+        read_only_fields = ['start_time', 'end_time']
 
-    def get_report_download_url(self, obj):
-        """
-        Returns URL for the report PDF if exists.
-        """
-        request = self.context.get('request')
-
-        # If no report yet → return None
-        if not hasattr(obj, "report"):
-            return None
-
-        report = obj.report
-
-        if not report.file:
-            return None
-        
-        # Build absolute download URL
-        return request.build_absolute_uri(report.file.url)
+    def validate_target_url(self, value):
+        return normalize_and_validate_public_http_url(value)
